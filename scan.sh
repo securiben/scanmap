@@ -126,13 +126,13 @@ while read service port ips; do
       SCRIPTS="sip-* and not brute"
       ;;
     jetdirect)
-      SCRIPTS="printer-* and not brute"
+      SCRIPTS="default and not brute"
       ;;
     cisco-sccp)
       SCRIPTS="cisco-* and not brute"
       ;;
     uucp-rlogin)
-      SCRIPTS="rlogin-* and not brute"
+      SCRIPTS="default and not brute"
       ;;
     time)
       SCRIPTS="default and not brute"
