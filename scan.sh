@@ -76,62 +76,71 @@ while read service port ips; do
   IPFILE="$OUTDIR/tmp_${service}_${port}.txt"
   echo "$ips" | tr ',' '\n' > "$IPFILE"
 
-case "$service" in
-  http|http-proxy)
-    SCRIPTS="http-* and not brute"
-    ;;
-  https|https-alt)
-    SCRIPTS="(http-* or ssl-*) and not brute"
-    ;;
-  ssh)
-    SCRIPTS="ssh-* and not brute"
-    ;;
-  ftp)
-    SCRIPTS="ftp-* and not brute"
-    ;;
-  telnet)
-    SCRIPTS="telnet-* and not brute"
-    ;;
-  smtp)
-    SCRIPTS="smtp-* and not brute"
-    ;;
-  pop3)
-    SCRIPTS="pop3-* and not brute"
-    ;;
-  imap)
-    SCRIPTS="imap-* and not brute"
-    ;;
-  ldap)
-    SCRIPTS="ldap-* and not brute"
-    ;;
-  microsoft-ds|netbios-ssn)
-    SCRIPTS="smb-* and not brute"
-    ;;
-  msrpc)
-    SCRIPTS="msrpc-* and not brute"
-    ;;
-  ms-wbt-server|vmrdp)
-    SCRIPTS="rdp-* and not brute"
-    ;;
-  snmp)
-    SCRIPTS="snmp-* and not brute"
-    ;;
-  ms-sql-s)
-    SCRIPTS="ms-sql-* and not brute"
-    ;;
-  mysql)
-    SCRIPTS="mysql-* and not brute"
-    ;;
-  sip)
-    SCRIPTS="sip-* and not brute"
-    ;;
-  jetdirect)
-    SCRIPTS="printer-* and not brute"
-    ;;
-  *)
-    SCRIPTS="default and not brute"
-    ;;
-esac
+  case "$service" in
+    http|http-proxy|blackice-icecap|blackice-alerts)
+      SCRIPTS="http-* and not brute"
+      ;;
+    https|https-alt)
+      SCRIPTS="(http-* or ssl-*) and not brute"
+      ;;
+    ssh)
+      SCRIPTS="ssh-* and not brute"
+      ;;
+    ftp)
+      SCRIPTS="ftp-* and not brute"
+      ;;
+    telnet)
+      SCRIPTS="telnet-* and not brute"
+      ;;
+    smtp)
+      SCRIPTS="smtp-* and not brute"
+      ;;
+    pop3)
+      SCRIPTS="pop3-* and not brute"
+      ;;
+    imap)
+      SCRIPTS="imap-* and not brute"
+      ;;
+    ldap)
+      SCRIPTS="ldap-* and not brute"
+      ;;
+    microsoft-ds|netbios-ssn)
+      SCRIPTS="smb-* and not brute"
+      ;;
+    msrpc)
+      SCRIPTS="msrpc-* and not brute"
+      ;;
+    ms-wbt-server|vmrdp)
+      SCRIPTS="rdp-* and not brute"
+      ;;
+    snmp)
+      SCRIPTS="snmp-* and not brute"
+      ;;
+    ms-sql-s)
+      SCRIPTS="ms-sql-* and not brute"
+      ;;
+    mysql)
+      SCRIPTS="mysql-* and not brute"
+      ;;
+    sip)
+      SCRIPTS="sip-* and not brute"
+      ;;
+    jetdirect)
+      SCRIPTS="printer-* and not brute"
+      ;;
+    cisco-sccp)
+      SCRIPTS="cisco-* and not brute"
+      ;;
+    uucp-rlogin)
+      SCRIPTS="rlogin-* and not brute"
+      ;;
+    time)
+      SCRIPTS="default and not brute"
+      ;;
+    *)
+      SCRIPTS="default and not brute"
+      ;;
+  esac
 
   nmap -Pn -sS -sV -O -T4 --max-retries 1 \
   --script "$SCRIPTS" \
