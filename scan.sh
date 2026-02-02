@@ -78,10 +78,10 @@ while read service port ips; do
 
   case "$service" in
     http|http-proxy|blackice-icecap|blackice-alerts)
-      SCRIPTS="http-* and not brute"
+      SCRIPTS="http-title,http-methods,http-headers,http-auth,http-server-header"
       ;;
     https|https-alt)
-      SCRIPTS="(http-* or ssl-*) and not brute"
+      SCRIPTS="http-title,http-methods,http-headers,http-auth,http-server-header,ssl-cert,ssl-enum-ciphers"
       ;;
     ssh)
       SCRIPTS="ssh-* and not brute"
