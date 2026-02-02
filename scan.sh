@@ -76,56 +76,62 @@ while read service port ips; do
   IPFILE="$OUTDIR/tmp_${service}_${port}.txt"
   echo "$ips" | tr ',' '\n' > "$IPFILE"
 
-  case "$service" in
-    http|http-proxy)
-      SCRIPTS="http-title,http-methods,http-enum,http-auth"
-      ;;
-    https|https-alt)
-      SCRIPTS="http-title,http-methods,http-enum,http-auth,ssl-cert,ssl-enum-ciphers"
-      ;;
-    ssh)
-      SCRIPTS="ssh-hostkey,ssh2-enum-algos,ssh-auth-methods"
-      ;;
-    ftp)
-      SCRIPTS="ftp-anon,ftp-bounce"
-      ;;
-    telnet)
-      SCRIPTS="telnet-encryption,telnet-ntlm-info"
-      ;;
-    smtp)
-      SCRIPTS="smtp-commands,smtp-open-relay"
-      ;;
-    pop3)
-      SCRIPTS="pop3-capabilities"
-      ;;
-    imap)
-      SCRIPTS="imap-capabilities"
-      ;;
-    ldap)
-      SCRIPTS="ldap-rootdse,ldap-search"
-      ;;
-    microsoft-ds|netbios-ssn)
-      SCRIPTS="smb-enum-shares,smb-enum-users,smb-ls,smb-os-discovery,smb-security-mode"
-      ;;
-    msrpc)
-      SCRIPTS="msrpc-enum"
-      ;;
-    ms-wbt-server)
-      SCRIPTS="rdp-ntlm-info,rdp-enum-encryption"
-      ;;
-    snmp)
-      SCRIPTS="snmp-info,snmp-interfaces,snmp-processes"
-      ;;
-    ms-sql-s)
-      SCRIPTS="ms-sql-info,ms-sql-config,ms-sql-ntlm-info,ms-sql-empty-password"
-      ;;
-    mysql)
-      SCRIPTS="mysql-info,mysql-empty-password"
-      ;;
-    *)
-      SCRIPTS="default,safe"
-      ;;
-  esac
+case "$service" in
+  http|http-proxy)
+    SCRIPTS="http-* and not brute"
+    ;;
+  https|https-alt)
+    SCRIPTS="(http-* or ssl-*) and not brute"
+    ;;
+  ssh)
+    SCRIPTS="ssh-* and not brute"
+    ;;
+  ftp)
+    SCRIPTS="ftp-* and not brute"
+    ;;
+  telnet)
+    SCRIPTS="telnet-* and not brute"
+    ;;
+  smtp)
+    SCRIPTS="smtp-* and not brute"
+    ;;
+  pop3)
+    SCRIPTS="pop3-* and not brute"
+    ;;
+  imap)
+    SCRIPTS="imap-* and not brute"
+    ;;
+  ldap)
+    SCRIPTS="ldap-* and not brute"
+    ;;
+  microsoft-ds|netbios-ssn)
+    SCRIPTS="smb-* and not brute"
+    ;;
+  msrpc)
+    SCRIPTS="msrpc-* and not brute"
+    ;;
+  ms-wbt-server|vmrdp)
+    SCRIPTS="rdp-* and not brute"
+    ;;
+  snmp)
+    SCRIPTS="snmp-* and not brute"
+    ;;
+  ms-sql-s)
+    SCRIPTS="ms-sql-* and not brute"
+    ;;
+  mysql)
+    SCRIPTS="mysql-* and not brute"
+    ;;
+  sip)
+    SCRIPTS="sip-* and not brute"
+    ;;
+  jetdirect)
+    SCRIPTS="printer-* and not brute"
+    ;;
+  *)
+    SCRIPTS="default and not brute"
+    ;;
+esac
 
   nmap -Pn -sS -sV -O -T4 --max-retries 1 \
   --script "$SCRIPTS" \
