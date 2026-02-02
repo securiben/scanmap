@@ -58,6 +58,8 @@ Host discovery → Port discovery → Deteksi service → Kelompokkan IP berdasa
 ./scan.sh 10.10.0.5
 ./scan.sh targets.txt
 ```
+## Preview
+<img width="513" height="394" alt="image" src="https://github.com/user-attachments/assets/fc2ad4fa-6edc-4384-96c7-b3d97a3a81a6" />
 
 ## 📄 License
 Free to use for educational & security assessment purposes.
