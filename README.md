@@ -1,57 +1,59 @@
 # 📡 SCANMAP
 
-Automation wrapper untuk mempercepat proses reconnaissance & enumeration pada VAPT / internal pentest.
+Smart Nmap wrapper that groups targets by service and runs NSE in bulk for ultra-fast network reconnaissance.
 
-Tool ini **mengubah cara Nmap dijalankan**:
+This tool **changes the way Nmap is executed**:
 
-> ❌ Bukan scan per IP  
-> ✅ Scan massal per **service**
+> ❌ Not scanning per IP  
+> ✅ Bulk scanning per **service**
 
-Hasilnya:
-- Jauh lebih cepat
-- Output lebih bersih
-- Minim noise (tanpa broadcast / brute / spam)
-- Siap jadi bahan report
+Results:
+- Much faster execution
+- Cleaner output
+- Minimal noise (no broadcast / brute / spam)
+- Report-ready results
 
 ---
 
-## 🚀 Kenapa tool ini dibuat?
+## 🚀 Why this tool exists
 
-Masalah umum saat pakai Nmap di subnet besar:
+A common problem when running Nmap on large subnets:
+
 ```
 nmap -sCV 10.10.0.0/24
 ```
 
-➡️ Sangat lama  
-➡️ Banyak output tidak perlu  
-➡️ Nmap dipanggil ratusan kali
 
-Tool ini mengubah alur menjadi:
+➡️ Extremely slow  
+➡️ Too much unnecessary output  
+➡️ Nmap gets executed hundreds of times
 
-Host discovery → Port discovery → Deteksi service → Kelompokkan IP berdasarkan service → Jalankan NSE massal per service
+SCANMAP changes the workflow into:
+
+**Host discovery → Port discovery → Service detection → Group IPs by service → Run NSE in bulk per service**
 
 ---
 
-## ⚙️ Fitur
+## ⚙️ Features
 
-- Host discovery otomatis
+- Automatic host discovery
 - Top 1000 port discovery
-- Parsing service otomatis
-- Bulk NSE berdasarkan service
-- Tanpa brute force
-- Tanpa broadcast noise
-- Support: subnet / single IP / file list
+- Automatic service parsing
+- Bulk NSE execution based on service
+- No brute force
+- No broadcast noise
+- Supports: subnet / single IP / file list
 
 ---
 
-## 📦 Requirement
+## 📦 Requirements
 
 - `nmap`
-- `httpx` (opsional, untuk web probing)
+- `httpx` (optional, for web probing)
 
 ---
 
-## 🛠️ Cara Pakai
+## 🛠️ Usage
 
 ```
 ./scan.sh 10.10.0.0/24
