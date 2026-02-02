@@ -1,6 +1,6 @@
 # 📡 SCANMAP
 
-Automation wrapper di atas **Nmap** untuk mempercepat proses reconnaissance & enumeration pada VAPT / internal pentest.
+Automation wrapper untuk mempercepat proses reconnaissance & enumeration pada VAPT / internal pentest.
 
 Tool ini **mengubah cara Nmap dijalankan**:
 
