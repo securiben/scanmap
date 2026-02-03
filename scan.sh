@@ -1,4 +1,5 @@
 #!/bin/bash
+clear
 
 TARGET="$1"
 
@@ -15,29 +16,71 @@ echo "[+] Output dir : $OUTDIR"
 echo
 
 ########################################
-# STAGE 1 — HOST DISCOVERY
+# PROGRESS BAR
 ########################################
-echo "[+] Stage 1: Host discovery..."
+progress () {
+  local current=$1
+  local total=$2
+  local width=40
+
+  local percent=$((current * 100 / total))
+  local filled=$((current * width / total))
+  local empty=$((width - filled))
+
+  printf "\r[%-${width}s] %d%% (%d/%d)" \
+    "$(printf '#%.0s' $(seq 1 $filled))" \
+    "$percent" "$current" "$total"
+}
+
+########################################
+# STAGE 1 — REAL HOST DISCOVERY (FAST)
+########################################
+echo "[+] Stage 1: Host discovery (TCP SYN ping)..."
 
 if [ -f "$TARGET" ]; then
-  nmap -Pn -T4 -iL "$TARGET" -oG "$OUTDIR/01_alive.gnmap" > /dev/null
+  TARGETS=$(cat "$TARGET")
 else
-  nmap -Pn -T4 "$TARGET" -oG "$OUTDIR/01_alive.gnmap" > /dev/null
+  TARGETS="$TARGET"
 fi
 
-grep "Up" "$OUTDIR/01_alive.gnmap" | awk '{print $2}' > "$OUTDIR/02_target.txt"
+TOTAL_NET=$(echo "$TARGETS" | wc -l)
+COUNT=0
+> "$OUTDIR/01_alive.gnmap"
+
+while read net; do
+  COUNT=$((COUNT+1))
+  progress $COUNT $TOTAL_NET
+
+  nmap -sn -T4 "$net" \
+  -oG - >> "$OUTDIR/01_alive.gnmap"
+
+done <<< "$TARGETS"
+
+echo
+grep "Up" "$OUTDIR/01_alive.gnmap" | awk '{print $2}' | sort -V > "$OUTDIR/02_target.txt"
 
 ########################################
-# STAGE 2 — FAST PORT DISCOVERY
+# STAGE 2 — FAST PORT DISCOVERY (WITH PROGRESS)
 ########################################
 echo "[+] Stage 2: Fast port mapping..."
 
-nmap -Pn --top-ports 1000 --open -T4 \
--iL "$OUTDIR/02_target.txt" \
--oN "$OUTDIR/03_ports.txt" > /dev/null
+TOTAL_IP=$(wc -l < "$OUTDIR/02_target.txt")
+COUNT=0
+> "$OUTDIR/03_ports.txt"
+
+while read ip; do
+  COUNT=$((COUNT+1))
+  progress $COUNT $TOTAL_IP
+
+  nmap -p- --open -T4 "$ip" \
+  -oN - >> "$OUTDIR/03_ports.txt"
+
+done < "$OUTDIR/02_target.txt"
+
+echo
 
 ########################################
-# PARSE IP + PORT + SERVICE
+# PARSE IP + PORT + SERVICE (SORTED)
 ########################################
 awk '
 /Nmap scan report for/ {ip=$5}
@@ -47,8 +90,11 @@ awk '
   service=$3;
   print ip, port, service
 }
-' "$OUTDIR/03_ports.txt" > "$OUTDIR/04_ip_port_service.txt"
+' "$OUTDIR/03_ports.txt" | sort -V > "$OUTDIR/04_ip_port_service.txt"
 
+########################################
+# GROUP BY SERVICE + PORT (ORDERED)
+########################################
 awk '
 {
   ip=$1; port=$2; service=$3;
@@ -56,90 +102,62 @@ awk '
   group[key]=group[key] ? group[key]","ip : ip;
 }
 END {
-  for (k in group) {
-    split(k,a,"|");
-    printf "%s %s %s\n", a[1], a[2], group[k];
+  n=asorti(group, idx)
+  for (i=1; i<=n; i++) {
+    k=idx[i]
+    split(k,a,"|")
+
+    split(group[k], ips, ",")
+    asort(ips)
+
+    iplist=""
+    for (j=1; j<=length(ips); j++)
+      iplist = iplist ? iplist","ips[j] : ips[j]
+
+    printf "%s %s %s\n", a[1], a[2], iplist
   }
 }
 ' "$OUTDIR/04_ip_port_service.txt" > "$OUTDIR/05_grouped.txt"
 
 ########################################
-# STAGE 3 — SMART NSE PER SERVICE (BULK, FIXED)
+# STAGE 3 — SMART NSE PER SERVICE (WITH PROGRESS)
 ########################################
-echo "[+] Stage 3: Smart NSE per SERVICE (bulk scan)..."
+echo "[+] Stage 3: Smart NSE per SERVICE (bulk)..."
 
+TOTAL_GROUP=$(wc -l < "$OUTDIR/05_grouped.txt")
+COUNT=0
 > "$OUTDIR/03_detail_all.txt"
 
 while read service port ips; do
-  echo "   -> $service : $port"
+  COUNT=$((COUNT+1))
+  progress $COUNT $TOTAL_GROUP
 
   IPFILE="$OUTDIR/tmp_${service}_${port}.txt"
-  echo "$ips" | tr ',' '\n' > "$IPFILE"
+  echo "$ips" | tr ',' '\n' | sort -V > "$IPFILE"
 
   case "$service" in
-    http|http-proxy|blackice-icecap|blackice-alerts)
-      SCRIPTS="http-title,http-methods,http-headers,http-auth,http-server-header"
+    http|http-proxy)
+      SCRIPTS="http-title,http-methods,http-headers,http-server-header"
       ;;
     https|https-alt)
-      SCRIPTS="http-title,http-methods,http-headers,http-auth,http-server-header,ssl-cert,ssl-enum-ciphers"
+      SCRIPTS="http-title,http-methods,http-headers,ssl-cert,ssl-enum-ciphers"
       ;;
-    ssh)
-      SCRIPTS="ssh-* and not brute"
-      ;;
-    ftp)
-      SCRIPTS="ftp-* and not brute"
-      ;;
-    telnet)
-      SCRIPTS="telnet-* and not brute"
-      ;;
-    smtp)
-      SCRIPTS="smtp-* and not brute"
-      ;;
-    pop3)
-      SCRIPTS="pop3-* and not brute"
-      ;;
-    imap)
-      SCRIPTS="imap-* and not brute"
-      ;;
-    ldap)
-      SCRIPTS="ldap-* and not brute"
-      ;;
-    microsoft-ds|netbios-ssn)
-      SCRIPTS="smb-* and not brute"
-      ;;
-    msrpc)
-      SCRIPTS="msrpc-* and not brute"
-      ;;
-    ms-wbt-server|vmrdp)
-      SCRIPTS="rdp-* and not brute"
-      ;;
-    snmp)
-      SCRIPTS="snmp-* and not brute"
-      ;;
-    ms-sql-s)
-      SCRIPTS="ms-sql-* and not brute"
-      ;;
-    mysql)
-      SCRIPTS="mysql-* and not brute"
-      ;;
-    sip)
-      SCRIPTS="sip-* and not brute"
-      ;;
-    jetdirect)
-      SCRIPTS="default and not brute"
-      ;;
-    cisco-sccp)
-      SCRIPTS="cisco-* and not brute"
-      ;;
-    uucp-rlogin)
-      SCRIPTS="default and not brute"
-      ;;
-    time)
-      SCRIPTS="default and not brute"
-      ;;
-    *)
-      SCRIPTS="default and not brute"
-      ;;
+    ssh) SCRIPTS="ssh-* and not brute" ;;
+    ftp) SCRIPTS="ftp-* and not brute" ;;
+    telnet) SCRIPTS="telnet-* and not brute" ;;
+    smtp) SCRIPTS="smtp-* and not brute" ;;
+    pop3) SCRIPTS="pop3-* and not brute" ;;
+    imap) SCRIPTS="imap-* and not brute" ;;
+    ldap) SCRIPTS="ldap-* and not brute" ;;
+    microsoft-ds|netbios-ssn) SCRIPTS="smb-* and not brute" ;;
+    msrpc) SCRIPTS="msrpc-* and not brute" ;;
+    ms-wbt-server|vmrdp) SCRIPTS="rdp-* and not brute" ;;
+    snmp) SCRIPTS="snmp-* and not brute" ;;
+    ms-sql-s) SCRIPTS="ms-sql-* and not brute" ;;
+    mysql) SCRIPTS="mysql-* and not brute" ;;
+    sip) SCRIPTS="sip-* and not brute" ;;
+    cisco-sccp) SCRIPTS="cisco-* and not brute" ;;
+    *) SCRIPTS="default and not brute" ;;
   esac
 
   nmap -Pn -sS -sV -O -T4 --max-retries 1 \
@@ -150,10 +168,12 @@ while read service port ips; do
 
 done < "$OUTDIR/05_grouped.txt"
 
+echo
+
 ########################################
 # EXTRACT WEB TARGETS
 ########################################
-awk '$1 ~ /http|https/ {print $3}' "$OUTDIR/05_grouped.txt" | tr ',' '\n' | sort -u > "$OUTDIR/06_ip_web.txt"
+awk '$1 ~ /http|https/ {print $3}' "$OUTDIR/05_grouped.txt" | tr ',' '\n' | sort -V -u > "$OUTDIR/06_ip_web.txt"
 
 ########################################
 # HTTPX PROBE
