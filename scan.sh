@@ -72,7 +72,7 @@ while read ip; do
   COUNT=$((COUNT+1))
   progress $COUNT $TOTAL_IP
 
-  nmap -p- --open -T4 "$ip" \
+  nmap --top-ports 1000 --open -T4 "$ip" \
   -oN - >> "$OUTDIR/03_ports.txt"
 
 done < "$OUTDIR/02_target.txt"
