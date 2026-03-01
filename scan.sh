@@ -168,7 +168,7 @@ if command -v nuclei >/dev/null 2>&1; then
   > "$NUCLEI_OUT"
   
   echo "[+] javascript"
-  cat "$TARGET_WEB" | nuclei -silent -tags vuln,cve,discovery,vkev,panel,xss,wordpress,exposure,wp-plugin,osint/ >> "$NUCLEI_OUT"
+  cat "$TARGET_WEB" | nuclei -silent -tags vuln,cve,vkev,panel,xss,wordpress,exposure,wp-plugin,osint/ >> "$NUCLEI_OUT"
   
 fi
 
