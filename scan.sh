@@ -168,19 +168,8 @@ if command -v nuclei >/dev/null 2>&1; then
   > "$NUCLEI_OUT"
   
   echo "[+] javascript"
-  cat "$TARGET_WEB" | nuclei -silent -t ~/nuclei-templates/javascript/ >> "$NUCLEI_OUT"
+  cat "$TARGET_WEB" | nuclei -silent -t vuln,cve,discovery,vkev,panel,xss,wordpress,exposure,wp-plugin,osint/ >> "$NUCLEI_OUT"
   
-  echo "[+] dns"
-  cat "$TARGET_WEB" | nuclei -silent -t ~/nuclei-templates/dns/ >> "$NUCLEI_OUT"
-
-  echo "[+] http"
-  cat "$TARGET_WEB" | nuclei -silent -t ~/nuclei-templates/http/ >> "$NUCLEI_OUT"
-
-  echo "[+] network"
-  cat "$TARGET_WEB" | nuclei -silent -t ~/nuclei-templates/network/ >> "$NUCLEI_OUT"
-
-  echo "[+] ssl"
-  cat "$TARGET_WEB" | nuclei -silent -t ~/nuclei-templates/ssl/ >> "$NUCLEI_OUT"
 fi
 
 echo
